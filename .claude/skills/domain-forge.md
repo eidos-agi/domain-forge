@@ -45,11 +45,13 @@ Offline (airplane, CI):
 domain-forge run "eidos" --no-check --json
 ```
 
-Keep only registry-empty names:
+Keep RDAP-empty names in the top `--limit` love window (not a cart, not DNS):
 
 ```bash
-domain-forge run "eidos" --available-only --json | jq -r '.candidates[].domain'
+domain-forge run "eidos" --available-only --json
 ```
+
+Inspect `availability.source` and `availability.confidence` before treating a row as empty. Do not pipe to domain-only `jq` and call that list free. `--available-only` cannot be combined with `--no-check`.
 
 Score a shortlist the human already has:
 

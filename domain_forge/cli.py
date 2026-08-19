@@ -40,9 +40,15 @@ def _emit(payload: Any, *, json_flag: bool, quiet: bool, tty: bool | None = None
 
 def _row_avail(row: dict[str, Any]) -> str:
     avail = row.get("availability")
-    if isinstance(avail, dict):
-        return str(avail.get("status", ""))
-    return ""
+    if not isinstance(avail, dict):
+        return ""
+    status = str(avail.get("status", ""))
+    source = avail.get("source")
+    confidence = avail.get("confidence")
+    if source == "rdap" and confidence == "registry":
+        return status
+    extra = source or confidence
+    return f"{status}/{extra}" if extra else status
 
 
 def _print_table(rows: list[dict[str, Any]]) -> None:
@@ -116,7 +122,7 @@ def build_parser() -> argparse.ArgumentParser:
     run.add_argument(
         "--available-only",
         action="store_true",
-        help="After checking, keep only RDAP-available names",
+        help="Keep RDAP-available names in the top --limit window (registry 404 only)",
     )
     run.add_argument("--timeout", type=float, default=8.0)
     add_out(run)
@@ -154,6 +160,8 @@ def cmd_check(args: argparse.Namespace) -> list[dict[str, Any]]:
 
 
 def cmd_run(args: argparse.Namespace) -> dict[str, Any]:
+    if args.no_check and args.available_only:
+        raise ValueError("--available-only requires a registry check; drop --no-check")
     tlds = _parse_tlds(args.tlds)
     result = run_pipeline(
         args.seed,
@@ -189,15 +197,40 @@ def cmd_doctor(_args: argparse.Namespace) -> dict[str, Any]:
     except Exception as exc:  # noqa: BLE001
         checks.append({"name": "score_eidos_com", "ok": False, "detail": str(exc)})
         ok = False
+    baked_ok = all(t in BAKED_RDAP for t in DEFAULT_TLDS) and "com" in BAKED_RDAP
     checks.append(
         {
             "name": "baked_rdap",
-            "ok": "com" in BAKED_RDAP and "ai" in BAKED_RDAP,
+            "ok": baked_ok,
             "detail": ",".join(sorted(BAKED_RDAP)),
         }
     )
-    checks.append({"name": "registers_domains", "ok": True, "detail": "no - check only"})
+    ok = ok and baked_ok
+    commands = _subcommand_names(build_parser())
+    register_ok = not ({"register", "buy"} & commands) and commands == {
+        "suggest",
+        "score",
+        "check",
+        "run",
+        "doctor",
+    }
+    checks.append(
+        {
+            "name": "registers_domains",
+            "ok": register_ok,
+            "detail": "parser surface: " + ",".join(sorted(commands)),
+        }
+    )
+    ok = ok and register_ok
     return {"ok": ok, "version": __version__, "checks": checks}
+
+
+def _subcommand_names(parser: argparse.ArgumentParser) -> set[str]:
+    names: set[str] = set()
+    for action in parser._subparsers._group_actions:  # noqa: SLF001
+        if getattr(action, "choices", None):
+            names.update(action.choices.keys())
+    return names
 
 
 def main(argv: Sequence[str] | None = None) -> int:

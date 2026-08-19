@@ -29,4 +29,59 @@ def test_available_only_filters() -> None:
         pause=0,
     )
     assert result.returned == 4
-    assert all(c.availability and c.availability.status == "available" for c in result.candidates)
+    assert result.filtered_out == 0
+    assert all(
+        c.availability
+        and c.availability.status == "available"
+        and c.availability.source == "rdap"
+        and c.availability.confidence == "registry"
+        for c in result.candidates
+    )
+
+
+def test_available_only_drops_dns_weak() -> None:
+    def fetch(url: str, timeout: float) -> tuple[int, bytes, str]:
+        if "iana.org" in url:
+            return 500, b"nope", url
+        if "dns.google" in url:
+            return 200, b'{"Status":3,"Answer":null}', url
+        raise AssertionError(url)
+
+    result = run(
+        "eidos",
+        tlds=("gg",),
+        limit=3,
+        check=True,
+        available_only=True,
+        fetch=fetch,
+        pause=0,
+    )
+    assert result.returned == 0
+    assert result.filtered_out == 3
+
+
+def test_available_only_drops_unknown() -> None:
+    def fetch(url: str, timeout: float) -> tuple[int, bytes, str]:
+        raise OSError("down")
+
+    result = run(
+        "eidos",
+        tlds=("com",),
+        limit=3,
+        check=True,
+        available_only=True,
+        fetch=fetch,
+        pause=0,
+    )
+    assert result.returned == 0
+    assert result.unknown == 3
+    assert result.filtered_out == 3
+
+
+def test_available_only_without_check_raises() -> None:
+    try:
+        run("eidos", tlds=("com",), limit=2, check=False, available_only=True)
+    except ValueError as exc:
+        assert "no-check" in str(exc)
+    else:
+        raise AssertionError("expected ValueError")

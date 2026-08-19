@@ -32,6 +32,14 @@ Because: an agent with a purchase path will eventually purchase. Domain money is
 Risk: users expect the last mile. We document the handoff.
 v2 might reverse this if: Knox-gated registrar invoke exists and a human is in the loop on every buy.
 
+## D-06: Default TLDs are a subset of baked RDAP
+Date: 2026-08-19
+Chose: drop `.co` from `DEFAULT_TLDS`
+Over: baking `https://rdap.nic.co/` (does not resolve); leaving `.co` on the default list and hoping IANA bootstrap is up
+Because: LOOK-0001 showed `--available-only` plus a default TLD without a baked floor turns DNS NXDOMAIN into "available." The baked table exists for the down case.
+Risk: people who want `.co` must pass `--tlds co` and accept weak DNS unless IANA is reachable.
+v2 might reverse this if: `.co` gets a working RDAP base we can bake.
+
 ## D-05: Stdlib only
 Date: 2026-08-19
 Chose: argparse + urllib, zero runtime deps

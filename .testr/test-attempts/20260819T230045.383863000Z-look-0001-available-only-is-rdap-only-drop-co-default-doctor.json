@@ -1,0 +1,18 @@
+{
+  "created_at": "2026-08-19T23:00:45.383955Z",
+  "goal": "LOOK-0001: available-only is RDAP-only; drop .co default; doctor ANDs baked_rdap",
+  "notes": "35 pytest; --available-only requires source=rdap confidence=registry; DNS-weak and unknown dropped; --no-check --available-only exits 2; DEFAULT_TLDS subset of BAKED_RDAP; doctor baked_rdap folds into ok",
+  "product_id": "domain-forge",
+  "proofs": [
+    "pytest 35 passed",
+    "ruff check ok",
+    "python -m domain_forge doctor --json ok"
+  ],
+  "schema_version": 1,
+  "status": "passed",
+  "test_commands_snapshot": [
+    "python -m pytest -q",
+    "python -m ruff check .",
+    "python -m domain_forge doctor --json"
+  ]
+}

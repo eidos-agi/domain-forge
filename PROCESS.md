@@ -13,3 +13,7 @@ Rejected path: Porkbun/Cloudflare purchase API as v1. That needs Knox, spends mo
 Rejected path: LLM love scores. The user asked how much people will love the names — that is a radio test and a TLD-trust test, which we can name and test. A completion would not be replayable.
 
 Kept: cli-forge contract (`--json`, no prompts, `--help` is schema), foss community files, testr/shipr product models.
+
+## 2026-08-19 — LOOK-0001 pushed the keep-key
+
+socratic/cursor-agent found `--available-only` using the status enum alone. Debate reproduced DNS-weak rows surviving the filter with a cold cache, and `--no-check --available-only` as a silent no-op. Rejected baking `https://rdap.nic.co/` — that host does not resolve. Dropped `.co` from `DEFAULT_TLDS` so the default path stays on baked RDAP. Rejected deleting get-/hq- affixes: existing generate tests require them and GENERIC only punishes exact SLDs.

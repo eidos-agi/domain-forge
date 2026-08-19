@@ -4,9 +4,19 @@ from __future__ import annotations
 
 from domain_forge.check import Fetcher, check_many
 from domain_forge.generate import generate
-from domain_forge.models import Candidate, RunResult
+from domain_forge.models import Availability, Candidate, RunResult
 from domain_forge.score import score_domain
 from domain_forge.tlds import DEFAULT_TLDS
+
+
+def is_registry_available(avail: Availability | None) -> bool:
+    """RDAP 404 only. DNS NXDOMAIN is labelled available/weak and must not pass."""
+    return (
+        avail is not None
+        and avail.status == "available"
+        and avail.source == "rdap"
+        and avail.confidence == "registry"
+    )
 
 
 def rank_candidates(
@@ -42,7 +52,11 @@ def run(
     timeout: float = 8.0,
     pause: float = 0.12,
 ) -> RunResult:
+    if available_only and not check:
+        raise ValueError("--available-only requires a registry check; drop --no-check")
     generated_n, ranked = rank_candidates(seed, tlds=tlds, limit=limit)
+    unknown = 0
+    filtered_out = 0
     if check and ranked:
         reports = check_many(
             [c.domain for c in ranked],
@@ -62,16 +76,19 @@ def run(
             )
             for c in ranked
         ]
+        unknown = sum(
+            1 for c in ranked if c.availability is None or c.availability.status == "unknown"
+        )
         if available_only:
-            ranked = [
-                c
-                for c in ranked
-                if c.availability is not None and c.availability.status == "available"
-            ]
+            kept = [c for c in ranked if is_registry_available(c.availability)]
+            filtered_out = len(ranked) - len(kept)
+            ranked = kept
     return RunResult(
         seed=seed,
         generated=generated_n,
         returned=len(ranked),
         checked=check,
         candidates=ranked,
+        unknown=unknown,
+        filtered_out=filtered_out,
     )

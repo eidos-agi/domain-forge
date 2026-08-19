@@ -45,6 +45,27 @@ def test_doctor_ok(capsys) -> None:
     assert code == 0
     payload = json.loads(capsys.readouterr().out)
     assert payload["ok"] is True
+    by_name = {c["name"]: c for c in payload["checks"]}
+    assert by_name["baked_rdap"]["ok"] is True
+    assert by_name["registers_domains"]["ok"] is True
+
+
+def test_doctor_fails_when_baked_rdap_missing(monkeypatch, capsys) -> None:
+    monkeypatch.setattr("domain_forge.cli.BAKED_RDAP", {})
+    monkeypatch.setattr("domain_forge.cli.DEFAULT_TLDS", ("com",))
+    code = main(["doctor", "--json"])
+    assert code == 1
+    payload = json.loads(capsys.readouterr().out)
+    assert payload["ok"] is False
+    baked = next(c for c in payload["checks"] if c["name"] == "baked_rdap")
+    assert baked["ok"] is False
+
+
+def test_no_check_available_only_exits_2(capsys) -> None:
+    code = main(["run", "eidos", "--no-check", "--available-only", "--json"])
+    assert code == 2
+    err = capsys.readouterr().err
+    assert "available-only" in err.lower()
 
 
 def test_pipeline_check_uses_fetcher() -> None:

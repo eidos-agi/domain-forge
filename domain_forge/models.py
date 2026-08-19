@@ -91,6 +91,8 @@ class RunResult:
     returned: int
     checked: bool
     candidates: list[Candidate] = field(default_factory=list)
+    unknown: int = 0
+    filtered_out: int = 0
 
     def to_dict(self) -> dict[str, Any]:
         return {
@@ -98,5 +100,7 @@ class RunResult:
             "generated": self.generated,
             "returned": self.returned,
             "checked": self.checked,
+            "unknown": self.unknown,
+            "filtered_out": self.filtered_out,
             "candidates": [c.to_dict() for c in self.candidates],
         }

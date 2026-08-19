@@ -12,7 +12,7 @@ World-facts about naming and the domain name system, not choices we made.
   blast_radius: check.py, CLI `check`/`run`, any agent that prints "available"
   current_encoding: domain_forge/check.py
   failure_signature: Report `available` for a name that WHOIS/RDAP shows as registered because it has no NS records.
-  enforcement: tests/test_check.py mocks RDAP 200/404; DNS path asserts confidence=weak
+  enforcement: tests/test_check.py mocks RDAP 200/404; DNS path asserts confidence=weak; tests/test_pipeline.py drops DNS-weak and unknown from --available-only; DEFAULT_TLDS subset of BAKED_RDAP
   last_validated:
     date: 2026-08-19
     by: grok

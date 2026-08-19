@@ -22,7 +22,7 @@ domain-forge doctor --json
 
 ## Safety
 
-Read-only. No `register`. `--available-only` filters after RDAP; it does not buy.
+Read-only. No `register`. `--available-only` keeps RDAP 404s in the top `--limit` window (`source=rdap`, `confidence=registry`). It does not buy, and it does not keep DNS NXDOMAIN. Incompatible with `--no-check`.
 
 ## Proof
 

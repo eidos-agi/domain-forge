@@ -27,7 +27,9 @@ TLD_LOVE: dict[str, int] = {
     "biz": 1,
 }
 
-DEFAULT_TLDS: tuple[str, ...] = ("com", "ai", "io", "dev", "app", "co", "org")
+# Default TLDs must be a subset of BAKED_RDAP. .co has no working baked
+# RDAP base (rdap.nic.co does not resolve); do not invent a DNS checker.
+DEFAULT_TLDS: tuple[str, ...] = ("com", "ai", "io", "dev", "app", "org")
 
 # Baked RDAP bases (trailing slash). Overlay IANA bootstrap when fetched.
 # .io is not in the IANA DNS bootstrap as of 2026-08; Identity Digital answers it.

@@ -30,7 +30,7 @@ domain-forge score eidos.com eidos.ai --json
 domain-forge check eidos.com zzzznotarealxyz123.com --json
 domain-forge run "eidos agi" --json
 domain-forge run "eidos" --no-check --json          # offline: generate + score only
-domain-forge run "eidos" --available-only --json    # drop taken names after RDAP
+domain-forge run "eidos" --available-only --json    # RDAP 404s in the top --limit window
 domain-forge doctor --json
 ```
 
@@ -60,7 +60,7 @@ RDAP is the registry signal:
 - HTTP 404 → `available` (not in the registry — not a purchase guarantee)
 - anything else → `unknown`
 
-`.com` / `.ai` / `.dev` / `.app` / `.io` use baked RDAP bases plus the IANA bootstrap cache. TLDs with no RDAP server fall back to DNS-over-HTTPS and come back `confidence: weak` — a registered name with no records looks empty.
+Default TLDs (`.com` `.ai` `.io` `.dev` `.app` `.org`) all have baked RDAP bases plus the IANA bootstrap cache. `.co` is not a default — its nic RDAP host does not resolve, and we will not fall back to DNS on the default path. Other TLDs with no RDAP server fall back to DNS-over-HTTPS and come back `confidence: weak`. `--available-only` keeps only `source=rdap` / `confidence=registry` rows.
 
 Premium, reserved, and trademark-blocked names can 404 and still refuse to sell. Treat `available` as “worth trying at a registrar,” not “yours.”
 

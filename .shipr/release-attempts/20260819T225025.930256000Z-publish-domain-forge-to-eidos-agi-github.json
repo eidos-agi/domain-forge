@@ -1,0 +1,54 @@
+{
+  "blocker_records": [],
+  "blockers": [],
+  "created_at": "2026-08-19T22:50:25.93031Z",
+  "gate_summary": [],
+  "goal": "publish domain-forge to eidos-agi GitHub",
+  "learning_prompts": [
+    "Did we ship a register command by accident?",
+    "Is RDAP still right for .io / .ai / .com?",
+    "What proof was missing until late?"
+  ],
+  "next_actions": [
+    "route lessons to learning-forge",
+    "watch rollback and support signals"
+  ],
+  "notes": "CLI has no /health.revision. Shipped = origin/main 8bc24cb at https://github.com/eidos-agi/domain-forge",
+  "product_id": "domain-forge",
+  "proofs": [
+    "https://github.com/eidos-agi/domain-forge",
+    "git rev-parse HEAD = 8bc24cb"
+  ],
+  "release_model_snapshot": {
+    "approval_gates": [
+      "public publish/tag",
+      "never register domains from this CLI"
+    ],
+    "artifact_types": [
+      "python package",
+      "cli (domain-forge, eidos-domains)"
+    ],
+    "distribution_channels": [
+      "GitHub eidos-agi/domain-forge",
+      "pip install -e ."
+    ],
+    "forge_stack": [
+      "testr",
+      "shipr",
+      "foss-forge",
+      "cli-forge"
+    ],
+    "license": "MIT",
+    "open_source_status": "public",
+    "proof_commands": [
+      "python -m pytest -q",
+      "python -m ruff check .",
+      "python -m domain_forge doctor --json"
+    ],
+    "proof_source": "testr",
+    "repository_visibility": "public"
+  },
+  "schema_version": 1,
+  "source": null,
+  "status": "shipped"
+}

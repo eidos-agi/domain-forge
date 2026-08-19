@@ -1,0 +1,20 @@
+{
+  "created_at": "2026-08-19T22:50:25.901491Z",
+  "goal": "prove generate + love score + RDAP check + no register",
+  "notes": "28 pytest passed, ruff clean, doctor ok love=95, live RDAP google.com taken / fake.com available / eidos.ai taken / eidoskit.com available",
+  "product_id": "domain-forge",
+  "proofs": [
+    "pytest 28 passed",
+    "ruff check ok",
+    "python -m domain_forge doctor --json ok",
+    "RDAP google.com=200 taken",
+    "RDAP zzzznotarealxyz123456.com=404 available"
+  ],
+  "schema_version": 1,
+  "status": "passed",
+  "test_commands_snapshot": [
+    "python -m pytest -q",
+    "python -m ruff check .",
+    "python -m domain_forge doctor --json"
+  ]
+}

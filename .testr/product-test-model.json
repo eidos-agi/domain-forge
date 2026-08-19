@@ -1,0 +1,33 @@
+{
+  "schema_version": 1,
+  "role": "ai_config_and_memory",
+  "purpose": "How domain-forge is proven. testr does not run tests.",
+  "product_id": "domain-forge",
+  "description": "Generate alternative domains, love-score them, check RDAP availability. Does not register.",
+  "test_commands": [
+    "python -m pytest -q",
+    "python -m ruff check .",
+    "python -m domain_forge doctor --json"
+  ],
+  "test_suites": ["pytest", "ruff", "doctor"],
+  "evidence_paths": [
+    "pytest -q",
+    "ruff check .",
+    "domain-forge doctor --json",
+    "live RDAP: google.com taken, fake .com available"
+  ],
+  "related_shipr": {
+    "operator": "shipr",
+    "model_path": ".shipr/product-release-model.json",
+    "loaded": true
+  },
+  "learning_questions": [
+    "Did a live RDAP 404 get treated as a cart?",
+    "Did love ranking put a suffix name above the seed itself?",
+    "What failed that a ship assumed green?"
+  ],
+  "memory_paths": {
+    "model": ".testr/product-test-model.json",
+    "attempts_dir": ".testr/test-attempts"
+  }
+}

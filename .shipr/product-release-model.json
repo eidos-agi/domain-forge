@@ -1,0 +1,43 @@
+{
+  "schema_version": 1,
+  "role": "ai_config_and_memory",
+  "purpose": "How domain-forge ships. shipr does not ship or run proofs.",
+  "product_id": "domain-forge",
+  "description": "CLI harness: generate alternative domains, love-score them, check RDAP. Public eidos-agi tool forge. No registrar, no deploy, no /health.",
+  "license": "MIT",
+  "open_source_status": "public",
+  "repository_visibility": "public",
+  "forge_stack": ["testr", "shipr", "foss-forge", "cli-forge"],
+  "proof_commands": [
+    "python -m pytest -q",
+    "python -m ruff check .",
+    "python -m domain_forge doctor --json"
+  ],
+  "proof_source": "testr",
+  "artifact_types": ["python package", "cli (domain-forge, eidos-domains)"],
+  "distribution_channels": [
+    "GitHub eidos-agi/domain-forge",
+    "pip install -e ."
+  ],
+  "approval_gates": [
+    "public publish/tag",
+    "never register domains from this CLI"
+  ],
+  "rollback_paths": [
+    "revert the git tag / main commit; pip install a previous ref"
+  ],
+  "related_testr": {
+    "loaded": true,
+    "model_path": ".testr/product-test-model.json",
+    "note": "testr test_commands are shipr proof_commands"
+  },
+  "learning_questions": [
+    "Did we ship a register command by accident?",
+    "Is RDAP still right for .io / .ai / .com?",
+    "What proof was missing until late?"
+  ],
+  "memory_paths": {
+    "model": ".shipr/product-release-model.json",
+    "attempts_dir": ".shipr/release-attempts"
+  }
+}

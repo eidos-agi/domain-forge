@@ -32,6 +32,14 @@ Because: an agent with a purchase path will eventually purchase. Domain money is
 Risk: users expect the last mile. We document the handoff.
 v2 might reverse this if: Knox-gated registrar invoke exists and a human is in the loop on every buy.
 
+## D-07: OS pivot is an explicit morph family
+Date: 2026-08-19
+Chose: `--pivot os` (also auto if the seed contains the token `os`)
+Over: always emitting primux-style names; an LLM name dump
+Because: pivoting prim into a Prim OS is a product decision, not a generic prefix. Morphs: `{stem}os`, `{stem}-os`, `os{stem}`, `{stem}ux`, `{stem}ix`, `{stem}core`, `{stem}sys`. Rank those above get-/try- without changing the 0-100 love number.
+Risk: more names, still not a cart. `primos.*` may all be taken; the morphs exist so the run is not just `goprim.com`.
+v2 might reverse this if: more pivots (cloud, lab) want the same gate.
+
 ## D-06: Default TLDs are a subset of baked RDAP
 Date: 2026-08-19
 Chose: drop `.co` from `DEFAULT_TLDS`

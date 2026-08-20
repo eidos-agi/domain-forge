@@ -14,6 +14,19 @@ from domain_forge.tlds import DEFAULT_TLDS
 PREFIXES = ("get", "try", "use", "go", "hey", "run")
 SUFFIXES = ("hq", "lab", "labs", "app", "kit", "run", "os", "works")
 MAX_SLD_LEN = 18
+PIVOTS = ("os",)
+
+# OS-product morphs from a short stem (prim → primos, primux). Gated by --pivot os
+# or a seed that already contains the token "os". Not applied to every brand.
+OS_MORPHS = (
+    ("{stem}os", "os"),
+    ("{stem}-os", "os-hyphen"),
+    ("os{stem}", "os-prefix"),
+    ("{stem}ux", "ux"),
+    ("{stem}ix", "ix"),
+    ("{stem}core", "core"),
+    ("{stem}sys", "sys"),
+)
 
 
 @dataclass(frozen=True)
@@ -32,7 +45,27 @@ def _devowel(sld: str) -> str:
     return out if out != sld else ""
 
 
-def _sld_candidates(tokens: list[str]) -> list[tuple[str, str]]:
+def resolve_pivot(tokens: list[str], pivot: str | None) -> str | None:
+    if pivot:
+        key = pivot.strip().lower()
+        if key not in PIVOTS:
+            raise ValueError(f"unknown pivot {pivot!r}; want one of: {', '.join(PIVOTS)}")
+        return key
+    if "os" in tokens:
+        return "os"
+    return None
+
+
+def _os_morphs(stem: str) -> list[tuple[str, str]]:
+    rows: list[tuple[str, str]] = []
+    if not stem or stem == "os":
+        return rows
+    for template, strategy in OS_MORPHS:
+        rows.append((template.format(stem=stem), strategy))
+    return rows
+
+
+def _sld_candidates(tokens: list[str], pivot: str | None = None) -> list[tuple[str, str]]:
     """Return (sld, strategy) pairs, first-wins order, later filtered."""
     out: list[tuple[str, str]] = []
     seen: set[str] = set()
@@ -81,6 +114,15 @@ def _sld_candidates(tokens: list[str]) -> list[tuple[str, str]]:
             for suffix in SUFFIXES:
                 add(stem + suffix, "suffix")
 
+    if pivot == "os":
+        for sld, strategy in _os_morphs(first):
+            add(sld, strategy)
+        # Prefix the actual OS product, not just the bare stem.
+        product = first + "os"
+        if 3 <= len(product) <= 12:
+            for prefix in ("get", "go"):
+                add(prefix + product, "os-prefix-brand")
+
     return out
 
 
@@ -88,15 +130,17 @@ def generate(
     seed: str,
     tlds: tuple[str, ...] | list[str] = DEFAULT_TLDS,
     limit: int | None = None,
+    pivot: str | None = None,
 ) -> list[Generated]:
     tokens = tokens_from_seed(seed)
+    pivot = resolve_pivot(tokens, pivot)
     tld_list = tuple(t.lower().lstrip(".") for t in tlds if t.strip())
     if not tld_list:
         raise ValueError("no TLDs")
 
     rows: list[Generated] = []
     seen: set[str] = set()
-    for sld, strategy in _sld_candidates(tokens):
+    for sld, strategy in _sld_candidates(tokens, pivot=pivot):
         for tld in tld_list:
             domain = join_domain(sld, tld)
             if domain in seen:

@@ -36,3 +36,27 @@ def test_no_invalid_labels() -> None:
         assert "--" not in row.sld
         assert not row.sld.startswith("-")
         assert not row.sld.endswith("-")
+
+
+def test_os_pivot_adds_morphs() -> None:
+    names = {r.domain for r in generate("prim", tlds=("com",), pivot="os")}
+    assert "primos.com" in names
+    assert "prim-os.com" in names
+    assert "osprim.com" in names
+    assert "primux.com" in names
+    assert "primix.com" in names
+    assert "primcore.com" in names
+    assert "primsys.com" in names
+    assert "goprim.com" in names
+
+
+def test_os_token_auto_pivots() -> None:
+    names = {r.domain for r in generate("prim os", tlds=("com",))}
+    assert "primos.com" in names
+    assert "primux.com" in names
+
+
+def test_no_os_morphs_without_pivot() -> None:
+    names = {r.domain for r in generate("eidos", tlds=("com",))}
+    assert "eidosux.com" not in names
+    assert "eidoscore.com" not in names

@@ -31,6 +31,7 @@ domain-forge check eidos.com zzzznotarealxyz123.com --json
 domain-forge run "eidos agi" --json
 domain-forge run "eidos" --no-check --json          # offline: generate + score only
 domain-forge run "eidos" --available-only --json    # RDAP 404s in the top --limit window
+domain-forge run prim.ai --pivot os --json          # prim → primos / primux / primcore
 domain-forge doctor --json
 ```
 

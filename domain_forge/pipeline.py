@@ -3,10 +3,51 @@
 from __future__ import annotations
 
 from domain_forge.check import Fetcher, check_many
-from domain_forge.generate import generate
+from domain_forge.generate import generate, resolve_pivot
 from domain_forge.models import Availability, Candidate, RunResult
+from domain_forge.parse import tokens_from_seed
 from domain_forge.score import score_domain
 from domain_forge.tlds import DEFAULT_TLDS
+
+OS_PRODUCT_STRATEGIES = frozenset(
+    {"os", "os-hyphen", "os-prefix", "ux", "ix", "core", "sys", "os-prefix-brand", "join"}
+)
+
+
+def seed_fit(sld: str, tokens: list[str], strategy: str, pivot: str | None) -> int:
+    """Prefer the product the human named over get-/try- spam.
+
+    Does not change the 0-100 love number. Tie-break only.
+    """
+    stem = tokens[0]
+    if pivot == "os":
+        products = {
+            stem + "os",
+            stem + "ux",
+            stem + "ix",
+            stem + "core",
+            stem + "sys",
+            "os" + stem,
+        }
+        if sld in products:
+            return 5
+        if sld == stem + "-os":
+            return 3
+        if sld == stem:
+            return 4
+        if strategy in OS_PRODUCT_STRATEGIES:
+            return 3
+        if strategy == "prefix":
+            return 0
+        return 1
+    joined = "".join(tokens)
+    if sld == joined:
+        return 4
+    if sld == stem:
+        return 3
+    if strategy == "prefix":
+        return 0
+    return 1
 
 
 def is_registry_available(avail: Availability | None) -> bool:
@@ -24,8 +65,11 @@ def rank_candidates(
     *,
     tlds: tuple[str, ...] | list[str] = DEFAULT_TLDS,
     limit: int = 20,
+    pivot: str | None = None,
 ) -> tuple[int, list[Candidate]]:
-    generated = generate(seed, tlds=tlds, limit=None)
+    tokens = tokens_from_seed(seed)
+    resolved = resolve_pivot(tokens, pivot)
+    generated = generate(seed, tlds=tlds, limit=None, pivot=resolved)
     scored = [
         Candidate(
             domain=row.domain,
@@ -36,8 +80,14 @@ def rank_candidates(
         )
         for row in generated
     ]
-    # Among equal love, shorter SLD first: eidos.com before eidoskit.com.
-    scored.sort(key=lambda c: (-c.love.love, len(c.sld), c.domain))
+    scored.sort(
+        key=lambda c: (
+            -c.love.love,
+            -seed_fit(c.sld, tokens, c.strategy, resolved),
+            len(c.sld),
+            c.domain,
+        )
+    )
     return len(generated), scored[: max(0, limit)]
 
 
@@ -51,10 +101,11 @@ def run(
     fetch: Fetcher | None = None,
     timeout: float = 8.0,
     pause: float = 0.12,
+    pivot: str | None = None,
 ) -> RunResult:
     if available_only and not check:
         raise ValueError("--available-only requires a registry check; drop --no-check")
-    generated_n, ranked = rank_candidates(seed, tlds=tlds, limit=limit)
+    generated_n, ranked = rank_candidates(seed, tlds=tlds, limit=limit, pivot=pivot)
     unknown = 0
     filtered_out = 0
     if check and ranked:
@@ -91,4 +142,5 @@ def run(
         candidates=ranked,
         unknown=unknown,
         filtered_out=filtered_out,
+        pivot=resolve_pivot(tokens_from_seed(seed), pivot),
     )

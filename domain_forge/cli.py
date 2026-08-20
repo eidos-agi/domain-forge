@@ -10,7 +10,8 @@ from typing import Any
 
 from domain_forge import __version__
 from domain_forge.check import check_many
-from domain_forge.parse import split_domain
+from domain_forge.generate import resolve_pivot
+from domain_forge.parse import split_domain, tokens_from_seed
 from domain_forge.pipeline import rank_candidates
 from domain_forge.pipeline import run as run_pipeline
 from domain_forge.score import score_domain
@@ -103,6 +104,7 @@ def build_parser() -> argparse.ArgumentParser:
     suggest.add_argument("seed", help="Brand, words, or an existing domain")
     suggest.add_argument("--tlds", default=",".join(DEFAULT_TLDS), help="Comma-separated TLDs")
     suggest.add_argument("--limit", type=int, default=40, help="Max candidates after scoring")
+    suggest.add_argument("--pivot", default=None, help="Product pivot. Currently: os")
     add_out(suggest)
 
     score = sub.add_parser("score", help="Score domains for how much people will love them")
@@ -125,6 +127,7 @@ def build_parser() -> argparse.ArgumentParser:
         help="Keep RDAP-available names in the top --limit window (registry 404 only)",
     )
     run.add_argument("--timeout", type=float, default=8.0)
+    run.add_argument("--pivot", default=None, help="Product pivot. Currently: os")
     add_out(run)
 
     doctor = sub.add_parser("doctor", help="Runtime health")
@@ -134,9 +137,10 @@ def build_parser() -> argparse.ArgumentParser:
 
 def cmd_suggest(args: argparse.Namespace) -> dict[str, Any]:
     tlds = _parse_tlds(args.tlds)
-    generated_n, ranked = rank_candidates(args.seed, tlds=tlds, limit=args.limit)
+    generated_n, ranked = rank_candidates(args.seed, tlds=tlds, limit=args.limit, pivot=args.pivot)
     return {
         "seed": args.seed,
+        "pivot": resolve_pivot(tokens_from_seed(args.seed), args.pivot),
         "generated": generated_n,
         "returned": len(ranked),
         "checked": False,
@@ -170,6 +174,7 @@ def cmd_run(args: argparse.Namespace) -> dict[str, Any]:
         check=not args.no_check,
         available_only=args.available_only,
         timeout=args.timeout,
+        pivot=args.pivot,
     )
     return result.to_dict()
 

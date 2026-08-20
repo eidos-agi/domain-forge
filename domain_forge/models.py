@@ -93,10 +93,12 @@ class RunResult:
     candidates: list[Candidate] = field(default_factory=list)
     unknown: int = 0
     filtered_out: int = 0
+    pivot: str | None = None
 
     def to_dict(self) -> dict[str, Any]:
         return {
             "seed": self.seed,
+            "pivot": self.pivot,
             "generated": self.generated,
             "returned": self.returned,
             "checked": self.checked,

@@ -1,0 +1,16 @@
+{
+  "created_at": "2026-08-20T02:10:10.522024Z",
+  "goal": "OS pivot morphs for prim → primos",
+  "notes": "40 pytest; --pivot os adds primos/primux/primix/primcore/primsys and ranks them above get/try",
+  "product_id": "domain-forge",
+  "proofs": [
+    "pytest 40 passed"
+  ],
+  "schema_version": 1,
+  "status": "passed",
+  "test_commands_snapshot": [
+    "python -m pytest -q",
+    "python -m ruff check .",
+    "python -m domain_forge doctor --json"
+  ]
+}

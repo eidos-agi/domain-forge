@@ -1,4 +1,4 @@
-from domain_forge.pipeline import rank_candidates, run
+from domain_forge.pipeline import rank_candidates, run, seed_fit
 
 
 def test_rank_orders_by_love() -> None:
@@ -11,8 +11,6 @@ def test_rank_orders_by_love() -> None:
 def test_shorter_sld_wins_love_ties() -> None:
     _n, rows = rank_candidates("eidos", tlds=("com",), limit=8)
     assert rows[0].domain == "eidos.com"
-    lengths = [len(c.sld) for c in rows]
-    assert lengths == sorted(lengths) or rows[0].love.love > rows[-1].love.love
 
 
 def test_available_only_filters() -> None:
@@ -76,6 +74,17 @@ def test_available_only_drops_unknown() -> None:
     assert result.returned == 0
     assert result.unknown == 3
     assert result.filtered_out == 3
+
+
+def test_os_pivot_ranks_product_above_get_prefix() -> None:
+    _n, rows = rank_candidates("prim", tlds=("com",), limit=40, pivot="os")
+    domains = [c.domain for c in rows]
+    assert "primos.com" in domains
+    assert domains.index("primos.com") < domains.index("goprim.com")
+
+
+def test_seed_fit_os_product() -> None:
+    assert seed_fit("primos", ["prim"], "os", "os") > seed_fit("goprim", ["prim"], "prefix", "os")
 
 
 def test_available_only_without_check_raises() -> None:

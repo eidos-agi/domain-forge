@@ -10,7 +10,22 @@ from domain_forge.score import score_domain
 from domain_forge.tlds import DEFAULT_TLDS
 
 OS_PRODUCT_STRATEGIES = frozenset(
-    {"os", "os-hyphen", "os-prefix", "ux", "ix", "core", "sys", "os-prefix-brand", "join"}
+    {
+        "os",
+        "os-hyphen",
+        "os-prefix",
+        "ux",
+        "ix",
+        "core",
+        "sys",
+        "join",
+        "latin",
+        "near",
+        "coined",
+        "mutate",
+        "metaphor",
+        "im",
+    }
 )
 
 

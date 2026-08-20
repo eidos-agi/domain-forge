@@ -32,6 +32,14 @@ Because: an agent with a purchase path will eventually purchase. Domain money is
 Risk: users expect the last mile. We document the handoff.
 v2 might reverse this if: Knox-gated registrar invoke exists and a human is in the loop on every buy.
 
+## D-08: Invent names, do not glue prefixes
+Date: 2026-08-19
+Chose: `creative.invent` — Latin inflections, prism-style near-words, coined tails, OS metaphors. On `--pivot os`, skip get/try/kit entirely.
+Over: more suffixes (hq, kit, run) and more prefixes (goprim)
+Because: Daniel said the OS run was still not right and to be more creative. goprim.com is not a name. Primora / Prism / Imprimis / Primdawn could go on a boot screen.
+Risk: many 7-letter coined .coms are already taken; the invention still earns its keep on .ai/.io/.dev and a few .coms (osprima, primdawn, lumenprim).
+v2 might reverse this if: a true namer model is allowed in-process without breaking stdlib-only.
+
 ## D-07: OS pivot is an explicit morph family
 Date: 2026-08-19
 Chose: `--pivot os` (also auto if the seed contains the token `os`)

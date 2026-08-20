@@ -76,11 +76,12 @@ def test_available_only_drops_unknown() -> None:
     assert result.filtered_out == 3
 
 
-def test_os_pivot_ranks_product_above_get_prefix() -> None:
-    _n, rows = rank_candidates("prim", tlds=("com",), limit=40, pivot="os")
+def test_os_pivot_ranks_invented_names() -> None:
+    _n, rows = rank_candidates("prim", tlds=("com",), limit=24, pivot="os")
     domains = [c.domain for c in rows]
-    assert "primos.com" in domains
-    assert domains.index("primos.com") < domains.index("goprim.com")
+    assert "goprim.com" not in domains
+    assert "primkit.com" not in domains
+    assert "primora.com" in domains or "prism.com" in domains or "primus.com" in domains
 
 
 def test_seed_fit_os_product() -> None:

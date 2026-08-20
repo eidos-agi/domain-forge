@@ -44,10 +44,13 @@ def test_os_pivot_adds_morphs() -> None:
     assert "prim-os.com" in names
     assert "osprim.com" in names
     assert "primux.com" in names
-    assert "primix.com" in names
-    assert "primcore.com" in names
-    assert "primsys.com" in names
-    assert "goprim.com" in names
+    assert "primora.com" in names
+    assert "prism.com" in names
+    assert "primus.com" in names
+    assert "prym.com" in names
+    assert "imprimis.com" in names
+    assert "goprim.com" not in names
+    assert "primkit.com" not in names
 
 
 def test_os_token_auto_pivots() -> None:

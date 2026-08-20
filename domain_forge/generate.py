@@ -8,6 +8,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
+from domain_forge.creative import invent
 from domain_forge.parse import is_valid_sld, join_domain, tokens_from_seed
 from domain_forge.tlds import DEFAULT_TLDS
 
@@ -103,25 +104,25 @@ def _sld_candidates(tokens: list[str], pivot: str | None = None) -> list[tuple[s
     if dropped_first:
         add(dropped_first, "devowel")
 
-    # Prefix/suffix only on the shortest honest stems.
-    stems = [joined, first]
-    if len(tokens) > 1:
-        stems.append(tokens[-1])
-    for stem in stems:
-        if 3 <= len(stem) <= 10:
-            for prefix in PREFIXES:
-                add(prefix + stem, "prefix")
-            for suffix in SUFFIXES:
-                add(stem + suffix, "suffix")
+    for sld, strategy in invent(first, pivot=pivot):
+        add(sld, strategy)
+
+    # Prefix/suffix glue is the 2012 playbook. Skip it on an OS pivot —
+    # goprim / primkit is how we got here, and it was wrong.
+    if pivot != "os":
+        stems = [joined, first]
+        if len(tokens) > 1:
+            stems.append(tokens[-1])
+        for stem in stems:
+            if 3 <= len(stem) <= 10:
+                for prefix in PREFIXES:
+                    add(prefix + stem, "prefix")
+                for suffix in SUFFIXES:
+                    add(stem + suffix, "suffix")
 
     if pivot == "os":
         for sld, strategy in _os_morphs(first):
             add(sld, strategy)
-        # Prefix the actual OS product, not just the bare stem.
-        product = first + "os"
-        if 3 <= len(product) <= 12:
-            for prefix in ("get", "go"):
-                add(prefix + product, "os-prefix-brand")
 
     return out
 

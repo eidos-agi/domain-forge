@@ -1,15 +1,11 @@
-"""Love score: how much a person will like saying, typing, and keeping this name.
+"""Love score: would a person want this as the name, not merely tolerate it.
 
-This is not an LLM vibe. Factors are named, bounded, and summed to 0–100 so
-an agent can explain the number. Grounding:
+The v1 rubric (length + 2-3 syllables + .com = 95) was a cleanliness
+checklist. It scored goprim.com above prim.com and primax.com next to
+primora.com. People do not love template glue. They love punchy brands,
+real words, and coinages that could go on a boot screen.
 
-- Radio test (classic brand naming): say it once, can the other person type it?
-- Length: 4–8 character SLDs are the ones people actually remember.
-- .com is still the TLD you don't have to explain. Novelty TLDs cost trust.
-- Hyphens and digits fail the business-card test.
-
-Distinctiveness is a penalty, not a bonus. "cloud.com" is pronounceable and
-still a name nobody falls in love with.
+Factors still named and bounded. No model.
 """
 
 from __future__ import annotations
@@ -19,9 +15,15 @@ import re
 from domain_forge.models import Factor, LoveScore
 from domain_forge.parse import split_domain
 from domain_forge.tlds import tld_love_points
-from domain_forge.words import GENERIC, STOPWORDS, WORDS
+from domain_forge.words import GENERIC, IMAGE, STOPWORDS, WORDS
 
 VOWELS = set("aeiouy")
+STARTUP_PREFIXES = ("get", "try", "use", "go", "hey", "run", "my", "the", "we")
+GLUE_SUFFIXES = ("hq", "kit", "app", "lab", "labs", "works", "ly", "ify", "demo")
+SOFT_OS_SUFFIXES = ("os", "ux", "sys", "core")
+JUNK_TAILS = ("ax", "ex", "xy", "qq")
+WEAK_TAILS = ("yn", "ea", "el", "en")
+NAME_TAILS = ("us", "um", "is", "or", "elle", "ora", "ara", "ova", "ion", "ia")
 
 
 def _syllables(sld: str) -> int:
@@ -32,24 +34,138 @@ def _syllables(sld: str) -> int:
     return max(1, n)
 
 
-def _consonant_cluster(sld: str) -> int:
-    runs = re.findall(r"[bcdfghjklmnpqrstvwxz]{2,}", sld)
+def _raw_cluster(part: str) -> int:
+    runs = re.findall(r"[bcdfghjklmnpqrstvwxz]{2,}", part)
     return max((len(r) for r in runs), default=0)
 
 
-def _looks_like_words(sld: str) -> tuple[int, str]:
+def _consonant_cluster(sld: str) -> int:
     compact = sld.replace("-", "")
-    if compact in WORDS and compact not in STOPWORDS and compact not in GENERIC:
-        return 8, f"{compact!r} is a real word"
+    for a, b in _splits(compact):
+        if _is_word(a) and _is_word(b):
+            return max(_raw_cluster(a), _raw_cluster(b))
+    return _raw_cluster(compact)
+
+
+def _is_word(s: str) -> bool:
+    return s in WORDS or s in IMAGE
+
+
+def _plausible_stem(s: str) -> bool:
+    if not (3 <= len(s) <= 6) or s in GENERIC or s in STARTUP_PREFIXES:
+        return False
+    if _is_word(s):
+        return True
+    core = s[:-1] if s.endswith("e") else s
+    if not core or all(c not in VOWELS for c in core):
+        return False
+    return any(c in VOWELS for c in s)
+
+
+def _splits(sld: str) -> list[tuple[str, str]]:
+    compact = sld.replace("-", "")
+    out: list[tuple[str, str]] = []
+    for i in range(2, len(compact) - 1):
+        out.append((compact[:i], compact[i:]))
+    return out
+
+
+def _punch(sld: str, syl: int) -> tuple[int, str]:
+    n = len(sld)
+    # One syllable of 3-6 letters is Apple/Slack/Prim, not a defect.
+    if 4 <= n <= 6 and syl <= 2:
+        return 20, f"{n} letters, {syl} syllable" + ("" if syl == 1 else "s") + " - punchy"
+    if n == 3 and syl == 1:
+        return 15, "3-letter punch; some people will ask you to spell it"
+    if 7 <= n <= 8 and syl <= 3:
+        return 17, f"{n} letters, still a name"
+    if 9 <= n <= 10 and syl <= 3:
+        return 12, f"{n} letters: getting long"
+    if n <= 2:
+        return 6, "too tiny; you will spell it every time"
+    return 5, f"{n} letters / {syl} syllables: a URL, not a name"
+
+
+def _radio(sld: str, syl: int, cluster: int, vowel_count: int) -> tuple[int, bool, str]:
+    n = len(sld)
+    if vowel_count == 0 or cluster >= 4 or any(ch.isdigit() for ch in sld) or n <= 2:
+        return 2, True, "fails the radio test - you will have to spell it"
+    if syl >= 5:
+        return 4, True, "too many beats to say once"
+    if syl <= 2 and n <= 10 and "-" not in sld:
+        return 12, False, "say it once, they can type it"
+    if syl == 3 and n <= 10:
+        return 10, False, "three beats, still sayable"
+    return 7, False, "mostly sayable"
+
+
+def _clean(sld: str) -> tuple[int, str]:
+    score = 10
+    bits: list[str] = []
+    if any(ch.isdigit() for ch in sld):
+        score -= 6
+        bits.append("digits")
     if "-" in sld:
-        parts = [p for p in sld.split("-") if p]
-        if parts and all(p in WORDS for p in parts):
-            return 9, "hyphenated real words"
-    for i in range(3, len(compact) - 2):
-        a, b = compact[:i], compact[i:]
-        if a in WORDS and b in WORDS:
-            return 10, f"reads as {a}+{b}"
-    return 5, "pronounceable stem, not a dictionary pair"
+        score -= 7
+        bits.append("hyphen")
+    if re.search(r"(.)\1\1", sld):
+        score -= 3
+        bits.append("triple letter")
+    if not bits:
+        bits.append("clean")
+    return max(0, score), ", ".join(bits)
+
+
+def _template(sld: str) -> tuple[int, str]:
+    compact = sld.replace("-", "")
+    for prefix in STARTUP_PREFIXES:
+        if compact.startswith(prefix) and len(compact) - len(prefix) >= 3:
+            return 4, f"startup prefix {prefix}- ; people do not love this"
+    for suffix in GLUE_SUFFIXES:
+        if compact.endswith(suffix) and compact != suffix and len(compact) > len(suffix) + 2:
+            return 6, f"product-suffix -{suffix} ; kit/hq/app is not a name"
+    if compact.endswith(JUNK_TAILS):
+        return 10, "generator tail (-ax/-ex) - reads as a pharma dump"
+    if compact.endswith(WEAK_TAILS) and len(compact) <= 8:
+        return 14, "thin coined tail"
+    for suffix in SOFT_OS_SUFFIXES:
+        # Prefix must be at least 4 letters so "eidos" is not eid+os.
+        if compact.endswith(suffix) and len(compact) - len(suffix) >= 4:
+            return 16, f"-{suffix} is on-brief for an OS, still a little glue"
+    if compact.startswith("os") and len(compact) > 4:
+        return 16, "os- prefix; readable, slightly mechanical"
+    return 24, "not a template"
+
+
+def _soul(sld: str) -> tuple[int, str]:
+    compact = sld.replace("-", "")
+    real = compact in WORDS and compact not in GENERIC and compact not in STOPWORDS
+    if compact in IMAGE or real:
+        return 24, f"{compact!r} is a word people already have a picture for"
+    for a, b in _splits(compact):
+        a_img = a in IMAGE or (a in WORDS and a not in GENERIC)
+        b_img = b in IMAGE or (b in WORDS and b not in GENERIC)
+        a_pref = a in STARTUP_PREFIXES
+        b_glue = b in GLUE_SUFFIXES
+        if a_pref and (b_img or 3 <= len(b) <= 6):
+            return 8, f"prefix glue {a}+{b}"
+        if b_glue:
+            return 8, f"suffix glue {a}+{b}"
+        if (a_img or b_img) and (a_img or _plausible_stem(a)) and (b_img or _plausible_stem(b)):
+            if a_img and b_img:
+                return 22, f"imageable compound {a}+{b}"
+            return 20, f"stem+picture {a}+{b}"
+    if compact.startswith("im") and compact.endswith("is") and 6 <= len(compact) <= 10:
+        return 20, "latin phrase-shape (imprimis)"
+    if any(compact.endswith(tail) for tail in NAME_TAILS) and 5 <= len(compact) <= 10:
+        return 18, "name-shaped coinage"
+    if compact.endswith(JUNK_TAILS):
+        return 5, "looks generated"
+    if compact.endswith(WEAK_TAILS):
+        return 8, "thin coinage"
+    if 4 <= len(compact) <= 6:
+        return 16, "short invented brand"
+    return 9, "pronounceable, no picture"
 
 
 def _grade(love: int) -> str:
@@ -71,71 +187,14 @@ def _grade(love: int) -> str:
 def score_domain(raw: str) -> LoveScore:
     sld, tld = split_domain(raw)
     domain = f"{sld}.{tld}"
-    factors: list[Factor] = []
-
-    n = len(sld)
-    if 4 <= n <= 8:
-        length_score, length_why = 20, f"{n}-character SLD (sweet spot 4-8)"
-    elif n == 3:
-        length_score, length_why = 14, "3 characters: short, often needs spelling"
-    elif n == 9 or n == 10:
-        length_score, length_why = 14, f"{n} characters: still sayable"
-    elif 11 <= n <= 13:
-        length_score, length_why = 8, f"{n} characters: long for a domain"
-    elif n <= 2:
-        length_score, length_why = 8, "tiny SLD — people will ask you to spell it"
-    else:
-        length_score, length_why = 3, f"{n} characters: too long to love"
-    factors.append(Factor("length", length_score, 20, length_why))
-
     syl = _syllables(sld)
     cluster = _consonant_cluster(sld)
     vowel_count = sum(ch in VOWELS for ch in sld)
-    pronounce = 18
-    pronounce_bits: list[str] = []
-    if syl in (2, 3):
-        pronounce_bits.append(f"{syl} syllables")
-    elif syl == 1:
-        pronounce -= 3
-        pronounce_bits.append("one syllable")
-    elif syl == 4:
-        pronounce -= 6
-        pronounce_bits.append("four syllables")
-    else:
-        pronounce -= 12
-        pronounce_bits.append(f"{syl} syllables")
-    if cluster >= 4:
-        pronounce -= 8
-        pronounce_bits.append(f"{cluster}-letter consonant pile")
-    elif cluster == 3:
-        pronounce -= 4
-        pronounce_bits.append("awkward consonant cluster")
-    if vowel_count == 0:
-        pronounce = 0
-        pronounce_bits.append("no vowels")
-    pronounce = max(0, min(18, pronounce))
-    factors.append(Factor("pronounce", pronounce, 18, ", ".join(pronounce_bits)))
 
-    spell = 15
-    spell_bits: list[str] = []
-    if any(ch.isdigit() for ch in sld):
-        spell -= 8
-        spell_bits.append("digits")
-    if "-" in sld:
-        spell -= 5
-        spell_bits.append("hyphen")
-    if any(ch in sld for ch in "0") or (sld.count("l") and sld.count("1")):
-        spell -= 3
-        spell_bits.append("lookalike characters")
-    if re.search(r"(.)\1\1", sld):
-        spell -= 4
-        spell_bits.append("triple letter")
-    if not spell_bits:
-        spell_bits.append("letters only, no hyphen")
-    spell = max(0, min(15, spell))
-    factors.append(Factor("spell", spell, 15, ", ".join(spell_bits)))
-
-    tld_pts = tld_love_points(tld)
+    punch, punch_why = _punch(sld, syl)
+    radio, must_spell, radio_why = _radio(sld, syl, cluster, vowel_count)
+    clean, clean_why = _clean(sld)
+    tld_pts = min(10, tld_love_points(tld))
     tld_why = {
         "com": ".com - still the one people trust",
         "ai": ".ai - fits an AI product without explaining",
@@ -144,67 +203,37 @@ def score_domain(raw: str) -> LoveScore:
         "info": ".info - spam TLD",
         "biz": ".biz - nobody loves this",
     }.get(tld, f".{tld}")
-    factors.append(Factor("tld", tld_pts, 15, tld_why))
+    template, template_why = _template(sld)
+    soul, soul_why = _soul(sld)
 
-    clean = 12
-    clean_bits: list[str] = []
-    if "-" in sld:
-        clean -= 7
-        clean_bits.append("hyphen")
-    if any(ch.isdigit() for ch in sld):
-        clean -= 6
-        clean_bits.append("digit")
-    if not clean_bits:
-        clean_bits.append("clean label")
-    clean = max(0, min(12, clean))
-    factors.append(Factor("clean", clean, 12, ", ".join(clean_bits)))
-
-    radio = 10
-    must_spell = False
-    if vowel_count == 0 or cluster >= 4 or any(ch.isdigit() for ch in sld) or n <= 2:
-        must_spell = True
-        radio = 2
-        radio_why = "fails the radio test - you will have to spell it"
-    elif spell < 10 or syl >= 5:
-        must_spell = True
-        radio = 4
-        radio_why = "sayable but people will still ask you to spell it"
-    elif syl in (2, 3) and spell >= 12 and n <= 10:
-        radio = 10
-        radio_why = "say it once, they can type it"
-    else:
-        radio = 7
-        radio_why = "mostly sayable"
-    factors.append(Factor("radio", radio, 10, radio_why))
-
-    word_pts, word_why = _looks_like_words(sld)
-    factors.append(Factor("wordness", word_pts, 10, word_why))
-
+    factors = (
+        Factor("punch", punch, 20, punch_why),
+        Factor("radio", radio, 12, radio_why),
+        Factor("clean", clean, 10, clean_why),
+        Factor("tld", tld_pts, 10, tld_why),
+        Factor("template", template, 24, template_why),
+        Factor("soul", soul, 24, soul_why),
+    )
     love = sum(f.score for f in factors)
     compact = sld.replace("-", "")
+    why_pen = None
     if compact in STOPWORDS or sld in STOPWORDS:
         love = min(love, 40)
         why_pen = "stopword SLD - nobody loves this as a brand"
     elif compact in GENERIC or sld in GENERIC:
-        love = max(0, love - 18)
+        love = max(0, love - 20)
         why_pen = "generic tech SLD - forgettable"
-    else:
-        why_pen = None
     love = max(0, min(100, love))
-
+    why = why_pen or f"{soul_why}; {template_why}"
+    n = len(sld)
     say_on_a_call = (not must_spell) and syl <= 3 and n <= 12
-    why = why_pen or factors[0].why
-    # Prefer a human sentence: tld + radio, unless penalized.
-    if why_pen is None:
-        why = f"{tld_why}; {radio_why}"
-
     return LoveScore(
         domain=domain,
         sld=sld,
         tld=tld,
         love=love,
         grade=_grade(love),
-        factors=tuple(factors),
+        factors=factors,
         must_spell=must_spell,
         say_on_a_call=say_on_a_call,
         why=why,

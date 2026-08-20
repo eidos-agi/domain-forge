@@ -9,21 +9,22 @@ from __future__ import annotations
 
 # How much people still treat the TLD as a real address, not a punchline.
 # .com remains the one you can say on a podcast without explaining it.
+# Max 10. A .com must not rescue a glue name.
 TLD_LOVE: dict[str, int] = {
-    "com": 15,
-    "ai": 13,
-    "io": 11,
-    "dev": 10,
-    "app": 10,
-    "org": 9,
-    "co": 8,
-    "net": 7,
-    "me": 7,
-    "so": 6,
-    "gg": 6,
-    "sh": 5,
-    "xyz": 3,
-    "info": 2,
+    "com": 10,
+    "ai": 9,
+    "io": 7,
+    "dev": 7,
+    "app": 7,
+    "org": 6,
+    "co": 5,
+    "net": 5,
+    "me": 5,
+    "so": 4,
+    "gg": 4,
+    "sh": 4,
+    "xyz": 2,
+    "info": 1,
     "biz": 1,
 }
 

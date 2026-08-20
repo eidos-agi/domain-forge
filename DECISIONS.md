@@ -32,6 +32,14 @@ Because: an agent with a purchase path will eventually purchase. Domain money is
 Risk: users expect the last mile. We document the handoff.
 v2 might reverse this if: Knox-gated registrar invoke exists and a human is in the loop on every buy.
 
+## D-09: Love is punch + soul, not cleanliness
+Date: 2026-08-19
+Chose: rewrite `score.py` — punch, radio, clean, tld(10), template(24), soul(24)
+Over: length+pronounce+spell+tld(15)+clean+radio+wordness, which scored goprim.com 95 and prim.com 89
+Because: Daniel said the scoring method was poor. A checklist of "not ugly" is not "people will love this." One-syllable 4-letter brands are the ones people remember. Template glue is the opposite of love. `.com` must not paper over `kit`/`get`/`-ax`.
+Risk: weights are still taste. Tests pin the comparisons that were wrong: prim>goprim, primora>primkit, primdawn>primax, imprimis>getprim.
+v2 might reverse this if: a preference study says people actually like get- names.
+
 ## D-08: Invent names, do not glue prefixes
 Date: 2026-08-19
 Chose: `creative.invent` — Latin inflections, prism-style near-words, coined tails, OS metaphors. On `--pivot os`, skip get/try/kit entirely.

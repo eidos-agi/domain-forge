@@ -1,0 +1,16 @@
+{
+  "created_at": "2026-08-20T02:30:15.456599Z",
+  "goal": "rewrite love score: punch+soul, glue loses",
+  "notes": "47+ tests; prim 92 \u003e goprim 64; primora \u003e primkit; primdawn \u003e primax; one-syllable is punchy",
+  "product_id": "domain-forge",
+  "proofs": [
+    "pytest passed"
+  ],
+  "schema_version": 1,
+  "status": "passed",
+  "test_commands_snapshot": [
+    "python -m pytest -q",
+    "python -m ruff check .",
+    "python -m domain_forge doctor --json"
+  ]
+}

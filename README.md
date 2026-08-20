@@ -39,17 +39,16 @@ domain-forge doctor --json
 
 ## Love score
 
-`love` is 0–100, summed from named factors (not a model vibe):
+`love` is 0–100. It is not a cleanliness checklist. A 6-letter `.com` that is just `get`+stem will lose to a 4-letter brand.
 
 | Factor | Max | What it captures |
 |---|---|---|
-| length | 20 | 4–8 character SLD sweet spot |
-| pronounce | 18 | syllables, vowel presence, consonant piles |
-| spell | 15 | digits, hyphens, lookalikes |
-| tld | 15 | `.com` still wins; `.xyz` is a joke to civilians |
-| clean | 12 | business-card test |
-| radio | 10 | say it once, can they type it? |
-| wordness | 10 | real word or clear blend vs noise |
+| punch | 20 | Short 1-2 syllable names (Prim, Slack) score full. One syllable is a feature. |
+| radio | 12 | Say it once, they can type it |
+| clean | 10 | Hyphens, digits |
+| tld | 10 | `.com` still helps. It cannot rescue glue. |
+| template | 24 | `get`/`kit`/`hq`/`-ax` burn this. Not a template → full points. |
+| soul | 24 | Real/imageable word, pleasant coinage, or empty noise |
 
 Generic SLDs (`cloud`, `app`, `data`) are penalized. Stopwords are capped. The JSON includes `factors[]`, `grade`, `must_spell`, `say_on_a_call`, and a one-line `why`.
 

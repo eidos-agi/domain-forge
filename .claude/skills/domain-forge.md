@@ -71,3 +71,4 @@ Do not call registrar APIs from a loop. Hand the shortlist to a human.
 - Trust `--help` over this file.
 - Failures: exit 2 = usage; exit 1 = doctor failed.
 - Do not "improve" the love score with an LLM. The rubric is the product.
+- Glue names (`getX`, `Xkit`) must score below the brand. If they don't, the scorer is wrong.

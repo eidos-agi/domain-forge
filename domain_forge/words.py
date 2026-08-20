@@ -13,6 +13,17 @@ STOPWORDS = frozenset(
     """.split()
 )
 
+# Imageable stems. A name that contains one of these can be pictured.
+# Used by the love scorer, not the generator.
+IMAGE = frozenset(
+    """
+    dawn nova lumen seed root vera prism prime origin light first aurora
+    aether star sun moon fire water earth sky sea wind rose hawk wolf
+    oak pine river stone glass gold iron silver snow rain dusk ember
+    spark flame dawnlight
+    """.split()
+)
+
 # Ultra-generic SLDs. People do not fall in love with these; they forget them.
 GENERIC = frozenset(
     """

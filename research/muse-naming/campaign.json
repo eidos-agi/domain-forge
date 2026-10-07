@@ -1,0 +1,20 @@
+{
+  "campaign": "exact-match-com-publishing",
+  "created_at_utc": "2026-10-07T23:39:49.270679+00:00",
+  "total_jobs": 1000,
+  "domains_per_job": 100,
+  "target_candidates": 100000,
+  "prepared_jobs": 1000,
+  "launched_jobs": 0,
+  "verified_domains": 0,
+  "dispatch": "not launched: Fleet work/agent control grant required",
+  "quality_gates": [
+    "phonetic & human review",
+    "cross-job deduplication",
+    "registry RDAP",
+    "trademark discovery",
+    "registrar eligibility"
+  ],
+  "registry_note": "RDAP 404 signals unregistered, not a registrar purchase guarantee",
+  "human_review": "No names approved automatically; don't invent uniqueness, availability or trademark clearance."
+}
